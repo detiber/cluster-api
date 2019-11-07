@@ -301,13 +301,11 @@ func (r *ClusterReconciler) listDescendants(ctx context.Context, cluster *cluste
 		client.MatchingLabels(map[string]string{clusterv1.ClusterLabelName: cluster.Name}),
 	}
 
-	var machineDeployments clusterv1.MachineDeploymentList
-	if err := r.Client.List(ctx, &machineDeployments, listOptions...); err != nil {
+	if err := r.Client.List(ctx, &descendants.machineDeployments, listOptions...); err != nil {
 		return descendants, errors.Wrapf(err, "failed to list MachineDeployments for cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
-	var machineSets clusterv1.MachineSetList
-	if err := r.Client.List(ctx, &machineSets, listOptions...); err != nil {
+	if err := r.Client.List(ctx, &descendants.machineSets, listOptions...); err != nil {
 		return descendants, errors.Wrapf(err, "failed to list MachineSets for cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
@@ -318,8 +316,6 @@ func (r *ClusterReconciler) listDescendants(ctx context.Context, cluster *cluste
 
 	// Split machines into control plane and worker machines so we make sure we delete control plane machines last
 	controlPlaneMachines, workerMachines := splitMachineList(&machines)
-	descendants.machineDeployments = machineDeployments
-	descendants.machineSets = machineSets
 	descendants.controlPlaneMachines = *controlPlaneMachines
 	descendants.workerMachines = *workerMachines
 
