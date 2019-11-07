@@ -173,14 +173,43 @@ func (r *ClusterReconciler) reconcileDelete(ctx context.Context, cluster *cluste
 		logger.Error(err, "Failed to list descendants")
 		return reconcile.Result{}, err
 	}
-	logger.Info("Cluster has descendants", "count", descendants.length(), "descendants", descendants)
+	var descendantNames []string
+	for _, md := range descendants.machineDeployments.Items {
+		descendantNames = append(descendantNames, fmt.Sprintf("%s/%s", md.Kind, md.Name))
+	}
+	for _, ms := range descendants.machineSets.Items {
+		descendantNames = append(descendantNames, fmt.Sprintf("%s/%s", ms.Kind, ms.Name))
+	}
+	for _, m := range descendants.controlPlaneMachines.Items {
+		descendantNames = append(descendantNames, fmt.Sprintf("%s/%s", m.Kind, m.Name))
+	}
+	for _, m := range descendants.workerMachines.Items {
+		descendantNames = append(descendantNames, fmt.Sprintf("%s/%s", m.Kind, m.Name))
+	}
+	logger.Info("Cluster has descendants", "count", descendants.length(), "descendants", descendantNames)
 
 	children, err := descendants.filterOwnedDescendants(cluster)
 	if err != nil {
 		logger.Error(err, "Failed to extract direct descendants")
 		return reconcile.Result{}, err
 	}
-	logger.Info("Cluster has children", "count", len(children), "children", children, "descendants count", descendants.length(), "descendants", descendants)
+	var childrenNames []string
+	for _, child := range children {
+		accessor, err := meta.Accessor(child)
+		if err != nil {
+			logger.Error(err, "Couldn't create accessor", "type", fmt.Sprintf("%T", child))
+			continue
+		}
+
+		if !accessor.GetDeletionTimestamp().IsZero() {
+			// Don't handle deleted child
+			continue
+		}
+
+		childrenNames = append(childrenNames, fmt.Sprintf("%s/%s", child.GetObjectKind().GroupVersionKind().Kind, accessor.GetName()))
+
+	}
+	logger.Info("Cluster has children", "count", len(children), "children", childrenNames)
 
 	if len(children) > 0 {
 		logger.Info("Cluster still has children - deleting them first", "count", len(children), "children", children)
