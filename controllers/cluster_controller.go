@@ -186,7 +186,7 @@ func (r *ClusterReconciler) reconcileDelete(ctx context.Context, cluster *cluste
 	for _, m := range descendants.workerMachines.Items {
 		descendantNames = append(descendantNames, fmt.Sprintf("%s/%s", m.Kind, m.Name))
 	}
-	logger.Info("Cluster has descendants", "count", descendants.length(), "descendants", descendantNames)
+	logger.Info("Cluster descendants", "count", descendants.length(), "descendants", descendantNames)
 
 	children, err := descendants.filterOwnedDescendants(cluster)
 	if err != nil {
@@ -209,10 +209,10 @@ func (r *ClusterReconciler) reconcileDelete(ctx context.Context, cluster *cluste
 		childrenNames = append(childrenNames, fmt.Sprintf("%s/%s", child.GetObjectKind().GroupVersionKind().Kind, accessor.GetName()))
 
 	}
-	logger.Info("Cluster has children", "count", len(children), "children", childrenNames)
+	logger.Info("Cluster children", "count", len(children), "children", childrenNames)
 
 	if len(children) > 0 {
-		logger.Info("Cluster still has children - deleting them first", "count", len(children), "children", children)
+		logger.Info("Cluster still has children - deleting them first", "count", len(children))
 
 		var errs []error
 
