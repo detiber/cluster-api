@@ -54,14 +54,35 @@ func (dst *ClusterList) ConvertFrom(srcRaw conversion.Hub) error {
 func (src *Machine) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha3.Machine)
 
-	return Convert_v1alpha2_Machine_To_v1alpha3_Machine(src, dst, nil)
+	if err := Convert_v1alpha2_Machine_To_v1alpha3_Machine(src, dst, nil); err != nil {
+		return err
+	}
+
+	clusterName, ok := src.Labels[MachineClusterLabelName]
+	if !ok {
+		return errors.New("cannot convert v1alpha2 Machine to v1alpha3, missing cluster-name label")
+	}
+
+	dst.Spec.ClusterName = clusterName
+
+	return nil
 }
 
 // nolint
 func (dst *Machine) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha3.Machine)
 
-	return Convert_v1alpha3_Machine_To_v1alpha2_Machine(src, dst, nil)
+	if err := Convert_v1alpha3_Machine_To_v1alpha2_Machine(src, dst, nil); err != nil {
+		return err
+	}
+
+	if dst.Labels == nil {
+		dst.Labels = make(map[string]string)
+	}
+
+	dst.Labels[MachineClusterLabelName] = src.Spec.ClusterName
+
+	return nil
 }
 
 func (src *MachineList) ConvertTo(dstRaw conversion.Hub) error {
@@ -80,14 +101,35 @@ func (dst *MachineList) ConvertFrom(srcRaw conversion.Hub) error {
 func (src *MachineSet) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha3.MachineSet)
 
-	return Convert_v1alpha2_MachineSet_To_v1alpha3_MachineSet(src, dst, nil)
+	if err := Convert_v1alpha2_MachineSet_To_v1alpha3_MachineSet(src, dst, nil); err != nil {
+		return err
+	}
+
+	clusterName, ok := src.Labels[MachineClusterLabelName]
+	if !ok {
+		return errors.New("cannot convert v1alpha2 MachineSet to v1alpha3, missing cluster-name label")
+	}
+
+	dst.Spec.ClusterName = clusterName
+
+	return nil
 }
 
 // nolint
 func (dst *MachineSet) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha3.MachineSet)
 
-	return Convert_v1alpha3_MachineSet_To_v1alpha2_MachineSet(src, dst, nil)
+	if err := Convert_v1alpha3_MachineSet_To_v1alpha2_MachineSet(src, dst, nil); err != nil {
+		return err
+	}
+
+	if dst.Labels == nil {
+		dst.Labels = make(map[string]string)
+	}
+
+	dst.Labels[MachineClusterLabelName] = src.Spec.ClusterName
+
+	return nil
 }
 
 func (src *MachineSetList) ConvertTo(dstRaw conversion.Hub) error {
@@ -106,14 +148,35 @@ func (dst *MachineSetList) ConvertFrom(srcRaw conversion.Hub) error {
 func (src *MachineDeployment) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha3.MachineDeployment)
 
-	return Convert_v1alpha2_MachineDeployment_To_v1alpha3_MachineDeployment(src, dst, nil)
+	if err := Convert_v1alpha2_MachineDeployment_To_v1alpha3_MachineDeployment(src, dst, nil); err != nil {
+		return err
+	}
+
+	clusterName, ok := src.Labels[MachineClusterLabelName]
+	if !ok {
+		return errors.New("cannot convert v1alpha2 MachineSet to v1alpha3, missing cluster-name label")
+	}
+
+	dst.Spec.ClusterName = clusterName
+
+	return nil
 }
 
 // nolint
 func (dst *MachineDeployment) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha3.MachineDeployment)
 
-	return Convert_v1alpha3_MachineDeployment_To_v1alpha2_MachineDeployment(src, dst, nil)
+	if err := Convert_v1alpha3_MachineDeployment_To_v1alpha2_MachineDeployment(src, dst, nil); err != nil {
+		return err
+	}
+
+	if dst.Labels == nil {
+		dst.Labels = make(map[string]string)
+	}
+
+	dst.Labels[MachineClusterLabelName] = src.Spec.ClusterName
+
+	return nil
 }
 
 func (src *MachineDeploymentList) ConvertTo(dstRaw conversion.Hub) error {
@@ -140,7 +203,12 @@ func Convert_v1alpha2_MachineSpec_To_v1alpha3_MachineSpec(in *MachineSpec, out *
 }
 
 func Convert_v1alpha3_MachineDeploymentSpec_To_v1alpha2_MachineDeploymentSpec(in *v1alpha3.MachineDeploymentSpec, out *MachineDeploymentSpec, s apiconversion.Scope) error {
-	return errors.New("cannot recover removed MachineDeploymentSpec Cluster Name")
+	if err := autoConvert_v1alpha3_MachineDeploymentSpec_To_v1alpha2_MachineDeploymentSpec(in, out, s); err != nil {
+		return err
+	}
+
+	// ClusterName is preserved by the MachineDeployment ConvertTo/ConvertFrom methods
+	return nil
 }
 
 func Convert_v1alpha3_MachineDeploymentStatus_To_v1alpha2_MachineDeploymentStatus(in *v1alpha3.MachineDeploymentStatus, out *MachineDeploymentStatus, s apiconversion.Scope) error {
@@ -148,9 +216,19 @@ func Convert_v1alpha3_MachineDeploymentStatus_To_v1alpha2_MachineDeploymentStatu
 }
 
 func Convert_v1alpha3_MachineSetSpec_To_v1alpha2_MachineSetSpec(in *v1alpha3.MachineSetSpec, out *MachineSetSpec, s apiconversion.Scope) error {
-	return errors.New("cannot recover removed MachineSetSpec Cluster Name")
+	if err := autoConvert_v1alpha3_MachineSetSpec_To_v1alpha2_MachineSetSpec(in, out, s); err != nil {
+		return err
+	}
+
+	// ClusterName is preserved by the MachineSet ConvertTo/ConvertFrom methods
+	return nil
 }
 
 func Convert_v1alpha3_MachineSpec_To_v1alpha2_MachineSpec(in *v1alpha3.MachineSpec, out *MachineSpec, s apiconversion.Scope) error {
-	return errors.New("cannot recover removed MachineSpec Cluster Name")
+	if err := autoConvert_v1alpha3_MachineSpec_To_v1alpha2_MachineSpec(in, out, s); err != nil {
+		return err
+	}
+
+	// ClusterName is preserved by the Machine ConvertTo/ConvertFrom methods
+	return nil
 }
